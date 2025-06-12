@@ -1,0 +1,82 @@
+# Step 1: Install Required Libraries
+%pip install numpy
+%pip install scipy
+%pip install gensim
+%pip install langchain-google-genai
+%pip install langchain-core
+%pip install langchain-community
+%pip install -qU langchain-google-genai
+%pip install --upgrade langchain
+
+# Step 2: Mount Google Drive
+from google.colab import drive
+drive.mount('/content/drive')
+
+# Step 3: Load or Download Word2Vec Model
+import os
+import gensim.downloader as api
+from gensim.models import KeyedVectors
+
+model_path = "/content/drive/My Drive/word2vec-google-news-300.model"
+
+if os.path.exists(model_path):
+    print("Model found in Google Drive..Loading")
+    word_vectors = KeyedVectors.load(model_path)
+    print("Loading Completed")
+else:
+    print("Model not found. Downloading Word2Vec model...")
+    word_vectors = api.load("word2vec-google-news-300")
+    print("Saving model to Google Drive for future use...")
+    word_vectors.save(model_path)
+    print("Model saved successfully")
+
+print("\nModel Loaded Successfully\n")
+
+# Step 4: Find Words Similar to "king"
+print("Top 5 words similar to 'king':")
+print(word_vectors.most_similar("king", topn=5))
+
+# Step 5: Get Prompt and Key Terms from User
+original_prompt = input("Enter the original prompt: ")
+key_terms_input = input("Enter key terms (comma-separated): ")
+key_terms = [term.strip() for term in key_terms_input.split(",")]
+
+# Step 6: Enrich Prompt with Similar Terms from Word2Vec
+similar_terms = []
+for term in key_terms:
+    if term in word_vectors.key_to_index:
+        similar_terms.extend({word for word, _ in word_vectors.most_similar(term, topn=2)})
+
+if similar_terms:
+    enriched_prompt = f"{original_prompt} Consider aspects like: {', '.join(similar_terms)}."
+else:
+    enriched_prompt = original_prompt
+
+print("Original Prompt:", original_prompt)
+print("Enriched Prompt:", enriched_prompt)
+
+# Step 7: Get Google API Key Securely
+import getpass
+GOOGLE_API_KEY = os.environ["GOOGLE_API_KEY"] = getpass.getpass("Enter your Google AI API key: ")
+
+# Step 8: Initialize Gemini 2.0 Flash Model with LangChain
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+llm = ChatGoogleGenerativeAI(
+    model="gemini-2.0-flash-exp",
+    temperature=0.3,
+    api_key=GOOGLE_API_KEY,
+    max_tokens=512,
+    timeout=30,
+    max_retries=2,
+)
+
+# Step 9: Interact with AI Model
+print("\nGemini AI Response to a greeting:")
+print(llm.invoke("Hi").content)
+
+print("\nGemini AI Response to the original prompt:")
+print(llm.invoke(original_prompt).content)
+
+print("\nGemini AI Response to the enriched prompt:")
+print(llm.invoke(enriched_prompt).content)

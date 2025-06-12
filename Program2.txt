@@ -1,0 +1,56 @@
+!pip install numpy==1.23.5
+!pip install gensim --upgrade
+import os
+import gensim.downloader as api
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from gensim.models import KeyedVectors
+from sklearn.metrics.pairwise import cosine_similarity
+from google.colab import drive
+
+drive.mount('/content/drive')
+
+model_path = "/content/drive/My Drive/word2vec-google-news-300.model"
+
+if os.path.exists(model_path):
+    print("Model found in Google Drive..Loading")
+    word_vectors = KeyedVectors.load(model_path)
+else:
+    print("Model not found. Downloading Word2Vec model...")
+    word_vectors = api.load("word2vec-google-news-300")
+    print("Saving model to Google Drive for future use...")
+    word_vectors.save(model_path)
+    print("Model saved successfully")
+
+print("\nModel Loaded Successfully\n")
+
+word2vec_model = KeyedVectors.load('/content/drive/My Drive/word2vec-google-news-300.model')
+
+words = [
+    "investment", "stocks", "bonds", "bank", "loan",
+    "interest", "equity", "mortgage", "risk", "dividend"
+]
+
+word_vectors = np.array([word2vec_model[word] for word in words])
+
+pca = PCA(n_components=2)
+reduced_vectors = pca.fit_transform(word_vectors)
+
+plt.figure(figsize=(10, 7))
+for i, word in enumerate(words):
+    plt.scatter(reduced_vectors[i, 0], reduced_vectors[i, 1])
+    plt.text(reduced_vectors[i, 0] + 0.01, reduced_vectors[i, 1] + 0.01, word, fontsize=12)
+
+plt.title('Word Embeddings Visualized using PCA')
+plt.xlabel('PCA Component 1')
+plt.ylabel('PCA Component 2')
+plt.grid(True)
+plt.show()
+
+def find_similar_words(input_word, model, top_n=5):
+    similar_words = model.most_similar(input_word, topn=top_n)
+    return [word for word, similarity in similar_words]
+
+similar_words_bank = find_similar_words('bank', word2vec_model)
+print("5 Semantically Similar Words to 'bank':", similar_words_bank)

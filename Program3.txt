@@ -1,0 +1,44 @@
+!pip install gensim
+!pip install scikit-learn
+from gensim.models import Word2Vec
+from gensim.models.phrases import Phrases, Phraser
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+
+# Load file from Google Drive
+file_path = "/content/drive/MyDrive/medical_corpus.txt"
+with open(file_path, "r") as file:
+    corpus = [line.strip() for line in file if line.strip()]
+
+stopwords = {"the", "a", "is", "for", "with", "to", "of", "and", "in", "can", "are"}
+
+# Tokenization and stopword removal
+tokenized_sentences = [
+    [word for word in sentence.lower().split() if word not in stopwords]
+    for sentence in corpus
+]
+
+# Detect bigrams
+bigram = Phrases(tokenized_sentences, min_count=2, threshold=5)
+bigram_phraser = Phraser(bigram)
+tokenized_sentences = [bigram_phraser[sentence] for sentence in tokenized_sentences]
+
+# Train Word2Vec model
+model = Word2Vec(
+    tokenized_sentences,
+    vector_size=150,
+    window=5,
+    min_count=2,
+    epochs=300,
+    sg=1,
+    hs=1,
+    negative=0
+)
+
+# Display similar words
+diabetes_similar = [(word, round(sim, 2)) for word, sim in model.wv.most_similar("diabetes", topn=5)]
+print("Words similar to 'diabetes':", diabetes_similar)
+
+hypertension_similar = [(word, round(sim, 2)) for word, sim in model.wv.most_similar("hypertension", topn=5)]
+print("Words similar to 'hypertension':", hypertension_similar)
+

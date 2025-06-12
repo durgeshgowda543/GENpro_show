@@ -1,0 +1,8 @@
+program 7: input file save input.text
+
+Text summarization is a key task in Natural Language Processing (NLP) that condenses a large block of text into a short, meaningful summary. It is especially useful for applications like news summarization, document previews, and information retrieval. In this lab, we explore summarization using an abstractive model, which generates new phrases and sentences rather than merely extracting existing ones.
+The model used is facebook/bart-large-cnn, an advanced transformer-based sequence-to sequence model developed by Facebook AI. It excels at summarization by encoding the input text and decoding it into a shorter, human-like version.
+We use the transformers library provided by Hugging Face, a powerful open-source platform that simplifies the use of state-of-the-art machine learning models. It offers a high-level API called pipeline() that abstracts the complexity of loading pre-trained models, managing tokenization, and performing inference, all in a few lines of code. A public online repository of pre-trained model where we can browse, search, and test models.can be found in
+https://huggingface.co/models
+
+
